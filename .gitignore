@@ -1,0 +1,9 @@
+# Python virtual environment
+backend/venv/
+
+# Py-cache
+__pycache__/
+*.pyc
+
+# OS-specific
+.DS_Store 
