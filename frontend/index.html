@@ -467,6 +467,27 @@
             display: none;
         }
 
+        #audio-player {
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+
+        .timestamp {
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .timestamp:hover {
+            text-decoration: underline;
+        }
+
+        #result-container strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
     </style>
 </head>
 <body>
@@ -510,7 +531,8 @@
                 <div id="progress-container" class="hidden">
                     <div id="progress-bar"></div>
                 </div>
-                <pre id="result-container">Тут з'явиться розшифрований текст...</pre>
+                <div id="result-container">Тут з'явиться розшифрований текст...</div>
+                <audio id="audio-player" controls class="hidden"></audio>
             </section>
         </div>
     </main>
@@ -632,6 +654,7 @@
             const mainProgressContainer = mainResultPanel.querySelector('#progress-container');
             const mainProgressBar = mainResultPanel.querySelector('#progress-bar');
             const mainCopyButton = mainResultPanel.querySelector('.copy-button');
+            const audioPlayer = mainResultPanel.querySelector('#audio-player');
 
             // --- Event Listeners ---
             if(minusBtn && plusBtn && numSpeakersInput) {
@@ -682,8 +705,9 @@
                     
                     hideModal();
 
+                    const audioFile = fileInput.files[0];
                     const formData = new FormData();
-                    formData.append('file', fileInput.files[0]);
+                    formData.append('file', audioFile);
                     
                     const modelName = form.querySelector('input[name="model"]:checked').value;
                     const language = form.querySelector('input[name="language"]:checked').value;
@@ -701,6 +725,7 @@
                     mainProgressBar.style.width = '0%';
                     mainResultContainer.textContent = 'Обробка запиту...';
                     if(mainCopyButton) mainCopyButton.style.display = 'none';
+                    if(audioPlayer) audioPlayer.classList.add('hidden');
 
                     try {
                         const response = await fetch(url, {
@@ -716,42 +741,76 @@
                         
                         mainProgressBar.style.width = '100%';
                         
-                        // --- Deduplication Logic ---
+                        mainResultContainer.innerHTML = ''; // Очистити попередні результати
+
+                        const timestampToSeconds = (ts) => {
+                            const parts = ts.replace(',', '.').split(':');
+                            let seconds = 0;
+                            if (parts.length === 3) { // HH:MM:SS.ms
+                                seconds += parseFloat(parts[0]) * 3600;
+                                seconds += parseFloat(parts[1]) * 60;
+                                seconds += parseFloat(parts[2]);
+                            } else if (parts.length === 2) { // MM:SS.ms
+                                seconds += parseFloat(parts[0]) * 60;
+                                seconds += parseFloat(parts[1]);
+                            } else if (parts.length === 1) { // SS.ms
+                                seconds += parseFloat(parts[0]);
+                            }
+                            return seconds;
+                        };
+
                         let lastSpeaker = null;
-                        const processedText = resultText.split('\n').map(line => {
-                            if (!line.includes('SPEAKER_')) {
-                                return line;
-                            }
-                            
-                            const timestampEnd = line.indexOf(']');
-                            if (timestampEnd === -1) {
-                                return line; 
-                            }
+                        const lines = resultText.split('\n');
+                        
+                        lines.forEach(line => {
+                            if (!line.trim()) return;
 
-                            const speakerStart = line.indexOf('SPEAKER_');
-                            const speakerEnd = line.indexOf(':', speakerStart);
-                            if (speakerStart === -1 || speakerEnd === -1) {
-                                return line;
-                            }
+                            const lineDiv = document.createElement('div');
+                            lineDiv.style.padding = '0.2rem 0';
                             
-                            const currentSpeaker = line.substring(speakerStart, speakerEnd);
-                            
-                            if (currentSpeaker === lastSpeaker) {
-                                // Remove speaker part, keep timestamp and text
-                                const textPart = line.substring(speakerEnd + 1);
-                                const timestampPart = line.substring(0, timestampEnd + 1);
-                                return `${timestampPart}${textPart}`;
+                            const timestampMatch = line.match(/^\[(.*?)\]/);
+
+                            if (timestampMatch) {
+                                const fullTimestamp = timestampMatch[1];
+                                // We are interested in the start time
+                                const startTimeStr = fullTimestamp.split(' -> ')[0];
+                                const startTimeInSeconds = timestampToSeconds(startTimeStr);
+                                
+                                let remainingText = line.substring(timestampMatch[0].length).trim();
+                                
+                                const timestampEl = document.createElement('a');
+                                timestampEl.href = '#';
+                                timestampEl.className = 'timestamp';
+                                timestampEl.dataset.time = startTimeInSeconds;
+                                timestampEl.textContent = timestampMatch[0];
+                                lineDiv.appendChild(timestampEl);
+
+                                const speakerMatch = remainingText.match(/^(SPEAKER_\d+:)/);
+                                if (speakerMatch) {
+                                    const currentSpeaker = speakerMatch[0];
+                                    if (currentSpeaker === lastSpeaker) {
+                                        // It's a repeated speaker, so we only take the text after the speaker tag.
+                                        remainingText = remainingText.substring(currentSpeaker.length).trim();
+                                    } else {
+                                        // It's a new speaker, update lastSpeaker.
+                                        lastSpeaker = currentSpeaker;
+                                    }
+                                }
+                                lineDiv.appendChild(document.createTextNode(` ${remainingText}`));
                             } else {
-                                lastSpeaker = currentSpeaker;
-                                return line;
+                                lineDiv.textContent = line;
                             }
-                        }).join('\n');
-                        // --- End of Deduplication ---
+                            mainResultContainer.appendChild(lineDiv);
+                        });
 
-                        mainResultContainer.textContent = processedText;
-
-                        if(mainCopyButton && processedText) {
+                        if(mainCopyButton && resultText) {
                             mainCopyButton.style.display = 'flex';
+                        }
+                        
+                        if(audioPlayer && audioFile) {
+                            const audioUrl = URL.createObjectURL(audioFile);
+                            audioPlayer.src = audioUrl;
+                            audioPlayer.classList.remove('hidden');
                         }
 
                     } catch (error) {
@@ -769,12 +828,24 @@
                 });
             }
 
+            mainResultContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('timestamp')) {
+                    e.preventDefault();
+                    const time = parseFloat(e.target.dataset.time);
+                    if (audioPlayer && !isNaN(time)) {
+                        audioPlayer.currentTime = time;
+                        audioPlayer.play();
+                    }
+                }
+            });
+
             if(mainCopyButton) {
                 mainCopyButton.addEventListener('click', () => {
-                    const fullText = mainResultContainer.textContent;
-                    if (fullText && fullText !== "Тут з'явиться розшифрований текст..." && fullText !== 'Обробка запиту...') {
-                        const cleanedText = fullText.split('\n')
-                            .map(line => line.replace(/^\[.*\]\s*/, ''))
+                    const textToCopy = mainResultContainer.innerText;
+
+                    if (textToCopy && textToCopy.trim() !== "Тут з'явиться розшифрований текст...") {
+                        const cleanedText = textToCopy.split('\n')
+                            .map(line => line.replace(/^\[.*?\]\s*/, ''))
                             .join('\n');
                         
                         navigator.clipboard.writeText(cleanedText).then(() => {
