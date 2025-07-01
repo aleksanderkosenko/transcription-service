@@ -115,6 +115,6 @@ tzdata==2025.2
 urllib3==2.5.0
 uvicorn==0.35.0
 whisper==1.1.10
-whisperx @ git+https://github.com/m-bain/whisperx.git@429658d4ccefa55244bcdccd5d179795436093e4
+whisperx @ git+https://github.com/m-bain/whisperx.git
 yarl==1.20.1
 zipp==3.23.0
