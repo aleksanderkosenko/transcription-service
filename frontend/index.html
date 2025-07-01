@@ -429,11 +429,53 @@
         }
 
         .content-wrapper > .result-panel {
-            display: none;
+            position: relative;
         }
 
-        .result-panel {
-            position: relative;
+        .copy-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            -webkit-mask-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAE7SURBVHgB7dmxisIwGAfwf9pS7s7j4NzuRlefRUcXJ0Fw1MmHcHAUhIKTg6s+i6/gqGtBbUwVpahRoqaf1e83tUmG/Ju2HyQAoyXONQZdmXe/UFG9/+r2AxbVGqKNO3jHDdvJ59CC5Yk/inPS8IMSMjL52EkAsUYRGeJdG3DvO2qbg4zjANSufgPnpFUn1NOdLl1M6nUxvzDGzKFOCBRg+XcbAUUvQjMIZF43xjhA2nVCSny6K7XauvnAEEWdEA7+dH03fQNJturEoC87++t4FXTj+DdKjQNQ4wDUOAA1DkCNA1DjANQ4ADUOQO319oWefS/0GL9C1DgANQ5A7S3PB0IkdqeTe5gUzFdAYoaUxQcdF/rM+BFG2K1CWkLvG2Ndp8ANhj35u/JRjuyeFYRqdjM/h1G1KhZgT2oDwOs54G46vhcAAAAASUVORK5CYII=');
+            mask-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAE7SURBVHgB7dmxisIwGAfwf9pS7s7j4NzuRlefRUcXJ0Fw1MmHcHAUhIKTg6s+i6/gqGtBbUwVpahRoqaf1e83tUmG/Ju2HyQAoyXONQZdmXe/UFG9/+r2AxbVGqKNO3jHDdvJ59CC5Yk/inPS8IMSMjL52EkAsUYRGeJdG3DvO2qbg4zjANSufgPnpFUn1NOdLl1M6nUxvzDGzKFOCBRg+XcbAUUvQjMIZF43xjhA2nVCSny6K7XauvnAEEWdEA7+dH03fQNJturEoC87++t4FXTj+DdKjQNQ4wDUOAA1DkCNA1DjANQ4ADUOQO319oWefS/0GL9C1DgANQ5A7S3PB0IkdqeTe5gUzFdAYoaUxQcdF/rM+BFG2K1CWkLvG2Ndp8ANhj35u/JRjuyeFYRqdjM/h1G1KhZgT2oDwOs54G46vhcAAAAASUVORK5CYII=');
+            background-color: var(--primary);
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: 24px;
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            -webkit-mask-size: 24px;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none;
+            transition: background-color 0.2s ease;
+        }
+        
+        .copy-button:hover {
+            background-color: #5B578A;
+        }
+
+        .copy-button.copied {
+            background-color: #5B578A;
+        }
+
+        #copy-notification {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #262626;
+            color: var(--text-primary);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            z-index: 1001;
+            display: none; /* Hidden by default */
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease, bottom 0.3s ease;
         }
 
     </style>
@@ -474,6 +516,7 @@
             <!-- Original form is removed from here -->
             <section class="result-panel">
                 <h2>Результат</h2>
+                <button type="button" class="copy-button" title="Скопіювати текст"></button>
                 <div id="progress-container" class="hidden">
                     <div id="progress-bar"></div>
                 </div>
@@ -481,6 +524,8 @@
             </section>
         </div>
     </main>
+
+    <div id="copy-notification">Текст скопійовано</div>
 
     <div id="upload-modal" class="modal-overlay">
         <div class="modal-content">
@@ -588,6 +633,7 @@
             const fileInput = document.getElementById('file');
             const uploadButton = document.getElementById('upload-button-trigger');
             const fileNameDisplay = document.getElementById('file-name');
+            const copyNotification = document.getElementById('copy-notification');
             
             const minusBtn = numSpeakersGroup.querySelector('.minus-btn');
             const plusBtn = numSpeakersGroup.querySelector('.plus-btn');
@@ -597,6 +643,7 @@
             const mainResultContainer = mainResultPanel.querySelector('#result-container');
             const mainProgressContainer = mainResultPanel.querySelector('#progress-container');
             const mainProgressBar = mainResultPanel.querySelector('#progress-bar');
+            const mainCopyButton = mainResultPanel.querySelector('.copy-button');
 
             // --- Event Listeners ---
             if(minusBtn && plusBtn && numSpeakersInput) {
@@ -665,6 +712,7 @@
                     mainProgressContainer.classList.remove('hidden');
                     mainProgressBar.style.width = '0%';
                     mainResultContainer.textContent = 'Обробка запиту...';
+                    if(mainCopyButton) mainCopyButton.style.display = 'none';
 
                     try {
                         const response = await fetch(url, {
@@ -682,6 +730,10 @@
                         
                         mainResultContainer.textContent = resultText;
 
+                        if(mainCopyButton && resultText) {
+                            mainCopyButton.style.display = 'flex';
+                        }
+
                     } catch (error) {
                         mainResultContainer.textContent = `Помилка: ${error.message}`;
                         mainProgressBar.style.backgroundColor = 'var(--error-color)';
@@ -696,6 +748,36 @@
                     }
                 });
             }
+
+            if(mainCopyButton) {
+                mainCopyButton.addEventListener('click', () => {
+                    const textToCopy = mainResultContainer.textContent;
+                    if (textToCopy && textToCopy !== "Тут з'явиться розшифрований текст..." && textToCopy !== 'Обробка запиту...') {
+                        navigator.clipboard.writeText(textToCopy).then(() => {
+                            mainCopyButton.classList.add('copied');
+
+                            if (copyNotification) {
+                                copyNotification.style.display = 'block';
+                            }
+                            
+                            setTimeout(() => {
+                                mainCopyButton.classList.remove('copied');
+                            }, 2000);
+
+                            if (copyNotification) {
+                                setTimeout(() => {
+                                    copyNotification.style.display = 'none';
+                                }, 5000);
+                            }
+
+                        }).catch(err => {
+                            console.error('Failed to copy: ', err);
+                            alert('Не вдалося скопіювати текст');
+                        });
+                    }
+                });
+            }
+
         });
     </script>
  
