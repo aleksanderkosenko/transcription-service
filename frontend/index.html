@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASR Сервіс Транскрипції</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #4A90E2;
-            --secondary-color: #50E3C2;
-            --background-color: #f8f9fa;
-            --surface-color: #ffffff;
-            --text-color: #343a40;
-            --text-light-color: #6c757d;
-            --border-color: #dee2e6;
-            --error-color: #e74c3c;
+            --bg-dark: #0D0D10;
+            --bg-light: #121215;
+            --primary: #A099FF;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border-color: #2A2A2A;
+            --error-color: #FF6B6B;
+            --button-disabled: #5B578A;
         }
 
         * {
@@ -24,52 +23,178 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        body.modal-open {
+            overflow: hidden;
         }
 
         .main-container {
             display: flex;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
             width: 100%;
         }
 
-        .form-panel {
-            flex: 1;
-            padding: 3rem 4rem;
-            background-color: var(--surface-color);
+        .hero-block {
+            width: 100%;
+            padding: 1.5rem 1rem;
+            text-align: left;
+            background: linear-gradient(to bottom right, #9CFFAC 0%, #88C2FF 33%, #C2A5FF 61%, #FFADDB 100%);
+            color: #0D0D10;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-
-        .result-panel {
-            flex: 1;
-            padding: 3rem 4rem;
-            background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .hero-content {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
+            gap: 1rem;
         }
-
-        header {
-            margin-bottom: 2.5rem;
+        .hero-block img {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 0;
         }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
+        .hero-block h1 {
+            font-size: 21px;
+            font-weight: 600;
             margin-bottom: 0.5rem;
+            color: #262626;
+        }
+        .hero-block p {
+            font-size: 16px;
+            max-width: 500px;
+            color: #262626;
         }
 
-        header p {
-            font-size: 1.1rem;
-            color: var(--text-light-color);
+        .hero-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: #262626;
+            color: var(--text-primary);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .hero-button:hover {
+            background-color: #3c3c3c;
+        }
+
+        .features-container {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .feature-block {
+            background-color: #262626;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .feature-block:hover {
+            background-color: #3c3c3c;
+        }
+        
+        .feature-block img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .feature-block h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .feature-block p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: var(--bg-dark);
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 700px;
+            width: 90%;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .content-wrapper {
+            max-width: 700px;
+            width: 100%;
+            padding: 2rem;
+        }
+
+        .form-panel, .result-panel {
+            width: 100%;
+            background-color: var(--bg-light);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .modal-content .form-panel, .modal-content .result-panel {
+            margin-bottom: 0;
+        }
+        .modal-content .result-panel {
+            margin-top: 2rem;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
         }
 
         .form-group {
@@ -79,76 +204,192 @@
         label {
             display: block;
             margin-bottom: 0.5rem;
-            font-weight: 500;
+            color: var(--text-secondary);
             font-size: 0.9rem;
         }
 
-        input[type="file"], select, input[type="number"] {
+        select, input[type="number"] {
             width: 100%;
             padding: 0.75rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             font-size: 1rem;
-            background-color: var(--background-color);
-            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
         }
         
-        input::placeholder {
-            color: var(--text-light-color);
+        .file-upload-area {
+            border-radius: 8px;
+            padding: 2rem;
+            transition: background-color 0.3s;
+            background-color: #5B578A;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-align: left;
+        }
+        .file-upload-area input[type="file"] {
+            display: none;
+        }
+        .file-upload-area-icon {
+           display: none;
         }
         
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        .file-upload-area h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 0.5rem;
+            border-bottom: none;
+            padding-bottom: 0;
         }
 
+        .file-upload-area p {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            color: #FFFFFF;
+            max-width: 90%;
+        }
+
+        .upload-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: #262626;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .upload-button:hover {
+            background-color: #3c3c3c;
+        }
+
+        .radio-button-group {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .radio-button-group.language-group label {
+            flex: 0 1 auto;
+        }
+
+        .radio-button-group input[type="radio"] {
+            display: none;
+        }
+
+        .radio-button-group label {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #262626;
+            color: var(--text-primary);
+            border: 2px solid #262626;
+            transition: all 0.2s ease-in-out;
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+
+        .radio-button-group label:hover {
+            background-color: #3c3c3c;
+            border-color: #3c3c3c;
+        }
+
+        .radio-button-group input[type="radio"]:checked + label {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: var(--bg-dark);
+            font-weight: 600;
+        }
+
+        .number-input-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.25rem;
+            max-width: 200px;
+        }
+
+        .number-input-container input {
+            width: 100%;
+            text-align: center;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0;
+        }
+
+        .num-speaker-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background-color: #262626;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .num-speaker-btn:hover {
+            background-color: #3c3c3c;
+        }
+        .num-speaker-btn:disabled {
+            background-color: var(--border-color);
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #file-name {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
         .checkbox-group {
             display: flex;
             align-items: center;
-            padding: 0.75rem;
+            padding: 0.75rem 1rem;
             border-radius: 8px;
-            background-color: var(--background-color);
+            background-color: var(--bg-dark);
         }
-
         .checkbox-group input {
             width: auto;
             margin-right: 0.75rem;
-            transform: scale(1.2);
         }
-
         .checkbox-group label {
             margin-bottom: 0;
-            font-weight: 500;
+            color: var(--text-primary);
         }
-        
+
         #submit-button {
             width: 100%;
             padding: 1rem;
-            background-image: linear-gradient(to right, var(--primary-color) 0%, var(--secondary-color) 100%);
-            background-size: 200% auto;
+            background-color: var(--primary);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.4s;
-            margin-top: 1rem;
+            transition: background-color 0.3s;
+            margin-top: 1.5rem;
         }
-
-        #submit-button:hover {
-            background-position: right center;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
         #submit-button:disabled {
-            background-image: none;
-            background-color: #bdc3c7;
+            background-color: var(--button-disabled);
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         #progress-container {
@@ -158,225 +399,318 @@
             margin-top: 1rem;
             overflow: hidden;
         }
-
         #progress-bar {
             width: 0%;
-            height: 24px;
-            background-color: var(--primary-color);
-            text-align: center;
-            color: white;
-            font-weight: 500;
-            line-height: 24px;
+            height: 8px;
+            background-color: var(--primary);
             transition: width 0.4s ease, background-color 0.4s ease;
         }
 
-        #result-placeholder {
-            max-width: 450px;
-        }
-        
-        #result-placeholder h2 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-        
-        #result-placeholder p {
-            font-size: 1.1rem;
-            opacity: 0.8;
-        }
-
         #result-container {
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.15);
-            padding: 2rem;
-            border-radius: 12px;
+            background-color: var(--bg-dark);
+            padding: 1.5rem;
+            border-radius: 8px;
             font-family: "SF Mono", "Courier New", Courier, monospace;
             font-size: 0.95rem;
             white-space: pre-wrap;
             word-wrap: break-word;
             overflow-y: auto;
-            max-height: 80vh;
+            color: var(--text-secondary);
+            min-height: 100px;
         }
         
         .hidden {
             display: none;
         }
 
-        @media (max-width: 992px) {
-            .main-container {
-                flex-direction: column;
-            }
-            .form-panel, .result-panel {
-                padding: 2rem;
-                min-height: 50vh;
-            }
+        /* HIDE original form panel */
+        .content-wrapper > .form-panel, .content-wrapper > .result-panel {
+            display: none;
         }
+
+        .content-wrapper > .result-panel {
+            display: none;
+        }
+
+        .result-panel {
+            position: relative;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
     </style>
 </head>
 <body>
 
     <main class="main-container">
-        <section class="form-panel">
-            <header>
-                <h1>Сервіс Транскрипції</h1>
-                <p>Завантажте аудіофайл, щоб отримати текстову версію розмови.</p>
-            </header>
-
-            <form id="upload-form">
-                <div class="form-group">
-                    <label for="file">Аудіофайл</label>
-                    <input type="file" id="file" name="file" accept="audio/*" required>
+        
+        <div class="content-wrapper">
+            <section class="hero-block">
+                <div class="hero-content">
+                    <img src="/static/icons/Icons.png" alt="Іконка сервісу">
+                    <div>
+                        <h1>Транскрибування аудіо в текст</h1>
+                        <p>Транскрибація аудіо файлів Українською мовою!</p>
+                    </div>
                 </div>
+                <button class="hero-button">Розпочати</button>
+            </section>
 
-                <div class="form-group">
-                    <label for="language">Мова (необов'язково)</label>
-                    <select id="language" name="language">
-                        <option value="">Автовизначення</option>
-                        <option value="uk">Українська</option>
-                        <option value="en">English</option>
-                        <option value="de">German</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="it">Italian</option>
-                    </select>
+            <section class="features-container">
+                <div class="feature-block" id="local-upload-block">
+                    <img src="/static/icons/play-cricle.png" alt="Іконка відтворення">
+                    <div>
+                        <h2>Конвертуйте локальний аудіо файл у текст</h2>
+                        <p>Завантажте аудіо файл з вашого пристрою для транскрибації.</p>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="model">Модель Whisper</label>
-                    <select id="model" name="model">
-                        <option value="small" selected>Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large-v2">Large v2</option>
-                    </select>
+                <div class="feature-block">
+                    <img src="/static/icons/microphone.png" alt="Іконка мікрофону">
+                    <div>
+                        <h2>Запис аудіо та перетворення на текст</h2>
+                        <p>Записуйте аудіо безпосередньо та перетворюйте його на текст.</p>
+                    </div>
                 </div>
+            </section>
 
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="diarize" name="diarize">
-                    <label for="diarize">Розділити дикторів</label>
-                </div>
-
-                <div class="form-group hidden" id="num-speakers-group">
-                    <label for="num_speakers">Кількість спікерів (якщо відомо)</label>
-                    <input type="number" id="num_speakers" name="num_speakers" min="1" placeholder="Залиште порожнім для автовизначення">
-                </div>
-
-                <button type="submit" id="submit-button">Транскрибувати</button>
-                
+            <!-- Original form is removed from here -->
+            <section class="result-panel">
+                <h2>Результат</h2>
                 <div id="progress-container" class="hidden">
                     <div id="progress-bar"></div>
                 </div>
-            </form>
-        </section>
-
-        <section class="result-panel">
-            <div id="result-placeholder">
-                <h2>Ваш результат тут</h2>
-                <p>Розшифрований текст з'явиться в цьому вікні після завершення обробки.</p>
-            </div>
-            <pre id="result-container" class="hidden"></pre>
-        </section>
+                <pre id="result-container">Тут з'явиться розшифрований текст...</pre>
+            </section>
+        </div>
     </main>
+
+    <div id="upload-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close-button">&times;</button>
+            <section class="form-panel">
+                <form id="upload-form">
+                    <h2>Налаштування транскрипції</h2>
+                    
+                    <div class="form-group">
+                        <label for="file">Аудіофайл</label>
+                        <div class="file-upload-area">
+                            <input type="file" id="file" name="file" accept="audio/*" required>
+                            <h2>Завантажте ваш аудіо файл</h2>
+                            <p>Почніть з завантаження аудіофайлу. Ми підтримуємо більшість популярних форматів.</p>
+                            <button type="button" id="upload-button-trigger" class="upload-button">Завантажити файл</button>
+                            <div id="file-name"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Оберіть якість та швидкість</label>
+                        <div class="radio-button-group">
+                            <input type="radio" id="model-small" name="model" value="small">
+                            <label for="model-small">Низька якість<br>висока швидкість</label>
+
+                            <input type="radio" id="model-medium" name="model" value="medium" checked>
+                            <label for="model-medium">Середня якість<br>середня швидкість</label>
+
+                            <input type="radio" id="model-large" name="model" value="large-v2">
+                            <label for="model-large">Висока якість<br>низька швидкість</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Мова</label>
+                        <div class="radio-button-group language-group">
+                            <input type="radio" id="lang-auto" name="language" value="" checked>
+                            <label for="lang-auto">🌍 Автовизначення</label>
+
+                            <input type="radio" id="lang-uk" name="language" value="uk">
+                            <label for="lang-uk">🇺🇦 Українська</label>
+
+                            <input type="radio" id="lang-en" name="language" value="en">
+                            <label for="lang-en">🇬🇧 English</label>
+
+                            <input type="radio" id="lang-de" name="language" value="de">
+                            <label for="lang-de">🇩🇪 German</label>
+
+                            <input type="radio" id="lang-es" name="language" value="es">
+                            <label for="lang-es">🇪🇸 Spanish</label>
+
+                            <input type="radio" id="lang-fr" name="language" value="fr">
+                            <label for="lang-fr">🇫🇷 French</label>
+
+                            <input type="radio" id="lang-it" name="language" value="it">
+                            <label for="lang-it">🇮🇹 Italian</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="num-speakers-group">
+                        <label for="num_speakers">Кількість спікерів</label>
+                        <div class="number-input-container">
+                            <button type="button" class="num-speaker-btn minus-btn">&ndash;</button>
+                            <input type="text" id="num_speakers" name="num_speakers" value="2" min="1" readonly>
+                            <button type="button" class="num-speaker-btn plus-btn">+</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-button">Транскрибувати</button>
+                    
+                </form>
+            </section>
+        </div>
+    </div>
     
     <script>
-        const form = document.getElementById('upload-form');
-        const submitButton = document.getElementById('submit-button');
-        const resultPlaceholder = document.getElementById('result-placeholder');
-        const resultContainer = document.getElementById('result-container');
-        
-        const diarizeCheckbox = document.getElementById('diarize');
-        const numSpeakersGroup = document.getElementById('num-speakers-group');
-        const numSpeakersInput = document.getElementById('num_speakers');
-        
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadModal = document.getElementById('upload-modal');
+            const localUploadBlock = document.getElementById('local-upload-block');
+            const heroStartButton = document.querySelector('.hero-button');
+            const closeModalButton = uploadModal.querySelector('.modal-close-button');
 
-        diarizeCheckbox.addEventListener('change', function() {
-            numSpeakersGroup.classList.toggle('hidden', !this.checked);
-            if (!this.checked) {
-                numSpeakersInput.value = '';
-            }
-        });
+            // --- Modal Controls ---
+            const showModal = () => {
+                uploadModal.classList.remove('hidden');
+                document.body.classList.add('modal-open');
+            };
+            const hideModal = () => {
+                uploadModal.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+            };
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+            localUploadBlock.addEventListener('click', showModal);
+            heroStartButton.addEventListener('click', showModal);
+            closeModalButton.addEventListener('click', hideModal);
+            uploadModal.addEventListener('click', (event) => {
+                if (event.target === uploadModal) hideModal();
+            });
 
-            const formData = new FormData();
+            // --- Form Logic ---
+            const form = document.getElementById('upload-form');
+            const submitButton = document.getElementById('submit-button');
+            const numSpeakersGroup = document.getElementById('num-speakers-group');
+            const numSpeakersInput = document.getElementById('num_speakers');
             const fileInput = document.getElementById('file');
-            const modelSelect = document.getElementById('model');
-            const languageSelect = document.getElementById('language');
-            const diarize = diarizeCheckbox.checked;
-            const numSpeakers = numSpeakersInput.value;
-
-            if (!fileInput.files.length) {
-                alert('Будь ласка, виберіть файл для завантаження.');
-                return;
-            }
-
-            formData.append('file', fileInput.files[0]);
+            const uploadButton = document.getElementById('upload-button-trigger');
+            const fileNameDisplay = document.getElementById('file-name');
             
-            const modelName = modelSelect.value;
-            const language = languageSelect.value;
-            
-            let url = `/api/v1/transcribe?model_name=${modelName}&diarize=${diarize}`;
-            if (language) url += `&language=${language}`;
-            if (diarize && numSpeakers) url += `&num_speakers=${numSpeakers}`;
+            const minusBtn = numSpeakersGroup.querySelector('.minus-btn');
+            const plusBtn = numSpeakersGroup.querySelector('.plus-btn');
 
-            submitButton.disabled = true;
-            resultPlaceholder.classList.add('hidden');
-            resultContainer.classList.add('hidden');
-            progressContainer.classList.remove('hidden');
-            progressBar.style.width = '0%';
-            progressBar.textContent = '';
-            
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 5;
-                if (progress <= 95) {
-                    progressBar.style.width = progress + '%';
-                    if (progress < 20) progressBar.textContent = 'Завантаження...';
-                    else if (progress < 60) progressBar.textContent = 'Транскрипція...';
-                    else progressBar.textContent = diarize ? 'Розділення дикторів...' : 'Фіналізація...';
-                }
-            }, 500);
+            // --- Main Page Result Display ---
+            const mainResultPanel = document.querySelector('.content-wrapper .result-panel');
+            const mainResultContainer = mainResultPanel.querySelector('#result-container');
+            const mainProgressContainer = mainResultPanel.querySelector('#progress-container');
+            const mainProgressBar = mainResultPanel.querySelector('#progress-bar');
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData,
+            // --- Event Listeners ---
+            if(minusBtn && plusBtn && numSpeakersInput) {
+                const updateButtons = (value) => {
+                    minusBtn.disabled = value <= 1;
+                };
+
+                minusBtn.addEventListener('click', () => {
+                    let currentValue = parseInt(numSpeakersInput.value, 10);
+                    if (currentValue > 1) {
+                        currentValue--;
+                        numSpeakersInput.value = currentValue;
+                        updateButtons(currentValue);
+                    }
                 });
 
-                const resultText = await response.text();
+                plusBtn.addEventListener('click', () => {
+                    let currentValue = parseInt(numSpeakersInput.value, 10);
+                    currentValue++;
+                    numSpeakersInput.value = currentValue;
+                    updateButtons(currentValue);
+                });
 
-                if (!response.ok) {
-                    throw new Error(`Сервер відповів з кодом ${response.status}: ${resultText}`);
-                }
-                
-                progressBar.style.width = '100%';
-                progressBar.textContent = 'Готово!';
-                
-                resultContainer.textContent = resultText;
-                resultContainer.classList.remove('hidden');
+                updateButtons(parseInt(numSpeakersInput.value, 10));
+            }
 
-            } catch (error) {
-                resultContainer.textContent = `Помилка: ${error.message}`;
-                resultContainer.classList.remove('hidden');
-                progressBar.style.width = '100%';
-                progressBar.style.backgroundColor = 'var(--error-color)';
-                progressBar.textContent = 'Помилка';
+            if(fileInput) {
+                fileInput.addEventListener('change', () => {
+                    if (fileInput.files.length > 0) {
+                        fileNameDisplay.textContent = fileInput.files[0].name;
+                        fileNameDisplay.style.color = 'var(--text-primary)';
+                    }
+                });
+            }
 
-            } finally {
-                clearInterval(interval);
-                submitButton.disabled = false;
-                submitButton.textContent = 'Транскрибувати';
-                setTimeout(() => {
-                    progressContainer.classList.add('hidden');
-                    progressBar.style.width = '0%';
-                    progressBar.style.backgroundColor = 'var(--primary-color)';
-                }, 3000);
+            if(uploadButton) {
+                uploadButton.addEventListener('click', () => fileInput.click());
+            }
+
+            if(form) {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    if (!fileInput.files.length) {
+                        alert('Будь ласка, виберіть файл для завантаження.');
+                        return;
+                    }
+                    
+                    hideModal();
+
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    
+                    const modelName = form.querySelector('input[name="model"]:checked').value;
+                    const language = form.querySelector('input[name="language"]:checked').value;
+                    const diarize = true;
+                    const numSpeakers = numSpeakersInput.value;
+                    
+                    let url = `/api/v1/transcribe?model_name=${modelName}&diarize=${diarize}`;
+                    if (language) url += `&language=${language}`;
+                    if (diarize && numSpeakers) url += `&num_speakers=${numSpeakers}`;
+
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Обробка...';
+                    mainResultPanel.style.display = 'block';
+                    mainProgressContainer.classList.remove('hidden');
+                    mainProgressBar.style.width = '0%';
+                    mainResultContainer.textContent = 'Обробка запиту...';
+
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        const resultText = await response.text();
+
+                        if (!response.ok) {
+                            throw new Error(`Сервер відповів з кодом ${response.status}: ${resultText}`);
+                        }
+                        
+                        mainProgressBar.style.width = '100%';
+                        
+                        mainResultContainer.textContent = resultText;
+
+                    } catch (error) {
+                        mainResultContainer.textContent = `Помилка: ${error.message}`;
+                        mainProgressBar.style.backgroundColor = 'var(--error-color)';
+                    } finally {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Транскрибувати';
+                        setTimeout(() => {
+                            mainProgressContainer.classList.add('hidden');
+                            mainProgressBar.style.width = '0%';
+                            mainProgressBar.style.backgroundColor = 'var(--primary)';
+                        }, 3000);
+                    }
+                });
             }
         });
     </script>
-
+ 
 </body>
 </html> 

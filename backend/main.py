@@ -9,6 +9,13 @@ import gc
 from typing import Dict, Optional
 from enum import Enum
 from itertools import groupby
+import whisper
+from whisperx.utils import get_writer
+from fastapi import FastAPI, File, UploadFile, Query, HTTPException, Request
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
+import torch
+import uvicorn
 
 # Define an Enum for model names for better validation and OpenAPI spec
 class ModelName(str, Enum):
@@ -81,7 +88,12 @@ async def lifespan(app: FastAPI):
     gc.collect()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="Whisper-X ASR API",
+    description="An API for highly accurate speech-to-text transcription and speaker identification.",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 def format_output(result: dict, diarize: bool) -> str:
     """Formats the transcription result into a human-readable string."""
@@ -114,8 +126,10 @@ def format_output(result: dict, diarize: bool) -> str:
     return "\n".join(lines) if lines else "Transcription complete, but no speaker segments found."
 
 # Mount the 'frontend' directory to serve static files
-app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
+# Mount the 'frontend/icons' directory to serve static files
+app.mount("/icons", StaticFiles(directory="frontend/icons"), name="icons")
 
 @app.post("/api/v1/transcribe")
 async def transcribe(
@@ -176,4 +190,37 @@ async def transcribe(
 
 @app.get("/")
 async def read_root():
-    return FileResponse('frontend/index.html') 
+    return FileResponse('frontend/index.html')
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Asynchronously loads all necessary models into memory on application startup.
+    This includes the default ASR model and, if configured, the diarization model.
+    """
+    print("--- Application starting up (via @on_event) ---")
+    
+    # Load default ASR model
+    load_model_into_cache(DEFAULT_MODEL.value)
+
+    # Attempt to load diarization model
+    global diarization_model
+    print("Attempting to load Diarization model...")
+    try:
+        # The token is only used for the initial download of a gated model.
+        token = os.getenv("HF_TOKEN")
+        diarization_model = whisperx.diarize.DiarizationPipeline(use_auth_token=token, device=device)
+        print("Diarization model loaded successfully.")
+    except Exception as e:
+        diarization_model = None
+        print("\n--- Diarization Model Loading Failed ---")
+        print("To enable speaker separation (diarization), a one-time setup is required:")
+        print("1. Go to https://huggingface.co/pyannote/speaker-diarization-3.1 and agree to the terms.")
+        print("2. Go to https://huggingface.co/settings/tokens to create a 'read' access token.")
+        print("3. Set the token as an environment variable: export HF_TOKEN='your_token_here'")
+        print("4. Restart the server. The model will be downloaded once and cached for offline use.")
+        print(f"(Error details: {e})\n")
+
+# --- Application Startup ---
+# This part is deprecated and its logic is already handled by the lifespan manager.
+# It will be removed. 
