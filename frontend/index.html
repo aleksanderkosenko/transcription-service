@@ -458,24 +458,13 @@
             background-color: #5B578A;
         }
 
-        .copy-button.copied {
-            background-color: #5B578A;
-        }
-
-        #copy-notification {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #262626;
-            color: var(--text-primary);
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            z-index: 1001;
-            display: none; /* Hidden by default */
-            font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: opacity 0.3s ease, bottom 0.3s ease;
+        .copy-status {
+            position: absolute;
+            top: 2.5rem;
+            right: calc(2rem + 40px + 1rem);
+            color: #B0B0B0;
+            font-size: 16px;
+            display: none;
         }
 
     </style>
@@ -516,6 +505,7 @@
             <!-- Original form is removed from here -->
             <section class="result-panel">
                 <h2>Результат</h2>
+                <span id="copy-status" class="copy-status">Текст скопійовано</span>
                 <button type="button" class="copy-button" title="Скопіювати текст"></button>
                 <div id="progress-container" class="hidden">
                     <div id="progress-bar"></div>
@@ -524,8 +514,6 @@
             </section>
         </div>
     </main>
-
-    <div id="copy-notification">Текст скопійовано</div>
 
     <div id="upload-modal" class="modal-overlay">
         <div class="modal-content">
@@ -633,7 +621,7 @@
             const fileInput = document.getElementById('file');
             const uploadButton = document.getElementById('upload-button-trigger');
             const fileNameDisplay = document.getElementById('file-name');
-            const copyNotification = document.getElementById('copy-notification');
+            const copyStatus = document.getElementById('copy-status');
             
             const minusBtn = numSpeakersGroup.querySelector('.minus-btn');
             const plusBtn = numSpeakersGroup.querySelector('.plus-btn');
@@ -751,25 +739,19 @@
 
             if(mainCopyButton) {
                 mainCopyButton.addEventListener('click', () => {
-                    const textToCopy = mainResultContainer.textContent;
-                    if (textToCopy && textToCopy !== "Тут з'явиться розшифрований текст..." && textToCopy !== 'Обробка запиту...') {
-                        navigator.clipboard.writeText(textToCopy).then(() => {
-                            mainCopyButton.classList.add('copied');
-
-                            if (copyNotification) {
-                                copyNotification.style.display = 'block';
-                            }
-                            
-                            setTimeout(() => {
-                                mainCopyButton.classList.remove('copied');
-                            }, 2000);
-
-                            if (copyNotification) {
+                    const fullText = mainResultContainer.textContent;
+                    if (fullText && fullText !== "Тут з'явиться розшифрований текст..." && fullText !== 'Обробка запиту...') {
+                        const cleanedText = fullText.split('\n')
+                            .map(line => line.replace(/^\[.*\]\s*/, ''))
+                            .join('\n');
+                        
+                        navigator.clipboard.writeText(cleanedText).then(() => {
+                            if (copyStatus) {
+                                copyStatus.style.display = 'inline';
                                 setTimeout(() => {
-                                    copyNotification.style.display = 'none';
+                                    copyStatus.style.display = 'none';
                                 }, 5000);
                             }
-
                         }).catch(err => {
                             console.error('Failed to copy: ', err);
                             alert('Не вдалося скопіювати текст');
