@@ -142,7 +142,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
+            display: none; /* Hidden by default */
             align-items: center;
             justify-content: center;
             z-index: 1000;
@@ -436,19 +436,6 @@
             position: relative;
         }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
     </style>
 </head>
 <body>
@@ -495,7 +482,7 @@
         </div>
     </main>
 
-    <div id="upload-modal" class="modal-overlay hidden">
+    <div id="upload-modal" class="modal-overlay">
         <div class="modal-content">
             <button class="modal-close-button">&times;</button>
             <section class="form-panel">
@@ -578,11 +565,11 @@
 
             // --- Modal Controls ---
             const showModal = () => {
-                uploadModal.classList.remove('hidden');
+                uploadModal.style.display = 'flex';
                 document.body.classList.add('modal-open');
             };
             const hideModal = () => {
-                uploadModal.classList.add('hidden');
+                uploadModal.style.display = 'none';
                 document.body.classList.remove('modal-open');
             };
 
