@@ -716,9 +716,41 @@
                         
                         mainProgressBar.style.width = '100%';
                         
-                        mainResultContainer.textContent = resultText;
+                        // --- Deduplication Logic ---
+                        let lastSpeaker = null;
+                        const processedText = resultText.split('\n').map(line => {
+                            if (!line.includes('SPEAKER_')) {
+                                return line;
+                            }
+                            
+                            const timestampEnd = line.indexOf(']');
+                            if (timestampEnd === -1) {
+                                return line; 
+                            }
 
-                        if(mainCopyButton && resultText) {
+                            const speakerStart = line.indexOf('SPEAKER_');
+                            const speakerEnd = line.indexOf(':', speakerStart);
+                            if (speakerStart === -1 || speakerEnd === -1) {
+                                return line;
+                            }
+                            
+                            const currentSpeaker = line.substring(speakerStart, speakerEnd);
+                            
+                            if (currentSpeaker === lastSpeaker) {
+                                // Remove speaker part, keep timestamp and text
+                                const textPart = line.substring(speakerEnd + 1);
+                                const timestampPart = line.substring(0, timestampEnd + 1);
+                                return `${timestampPart}${textPart}`;
+                            } else {
+                                lastSpeaker = currentSpeaker;
+                                return line;
+                            }
+                        }).join('\n');
+                        // --- End of Deduplication ---
+
+                        mainResultContainer.textContent = processedText;
+
+                        if(mainCopyButton && processedText) {
                             mainCopyButton.style.display = 'flex';
                         }
 
