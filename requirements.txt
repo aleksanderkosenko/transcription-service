@@ -16,7 +16,7 @@ click==8.1.8
 coloredlogs==15.0.1
 colorlog==6.9.0
 contourpy==1.3.0
-ctranslate2==4.6.0
+ctranslate2==4.4.0
 cycler==0.12.1
 docopt==0.6.2
 einops==0.8.1
@@ -116,3 +116,4 @@ whisper==1.1.10
 whisperx @ git+https://github.com/m-bain/whisperx.git
 yarl==1.20.1
 zipp==3.23.0
+collect_env==1.1.1
