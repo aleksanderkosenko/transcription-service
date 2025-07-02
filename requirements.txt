@@ -116,4 +116,3 @@ whisper==1.1.10
 whisperx @ git+https://github.com/m-bain/whisperx.git
 yarl==1.20.1
 zipp==3.23.0
-collect_env==1.1.1
