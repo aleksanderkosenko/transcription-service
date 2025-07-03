@@ -2,4 +2,5 @@ services:
   - type: web
     name: transcription-service
     env: docker
-    plan: free 
+    plan: free
+    startCommand: "gunicorn --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:10000 backend.main:app" 
